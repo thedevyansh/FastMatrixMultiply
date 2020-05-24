@@ -349,28 +349,34 @@ void insert(struct hashTable* t, int key, float value)
 {
     int pos = hashCode(t, key);
 
-    struct node *temp;
-
     if(t->list[pos] == NULL) {
+
         struct node *newnode = (struct node*) malloc(sizeof(struct node));
         newnode->key = key;
         newnode->value = value;
         newnode->next = NULL;
 
         t->list[pos] = newnode;
-        temp = newnode;
     }
 
     else {
 
-        struct node *transverse = t->list[pos];
+        struct node *transverse = NULL, *temp = t->list[pos];
 
-        while(transverse != NULL) {
-            if(transverse->key == key) {
-                transverse->value = value;
+        while(temp != NULL) {
+
+            if(temp->key == key) {
+
+                temp->value = value;
+
                 return;
             }
-            transverse = transverse->next;
+
+            //pointer to last node
+            if(temp->next == NULL)
+                transverse = temp;
+
+            temp = temp->next;
         }
 
         struct node *newnode = (struct node*) malloc(sizeof(struct node));
@@ -378,8 +384,7 @@ void insert(struct hashTable* t, int key, float value)
         newnode->value = value;
         newnode->next = NULL;
 
-        temp->next = newnode;
-        temp = temp->next;
+        transverse->next = newnode;
     }
 }
 
@@ -442,7 +447,7 @@ void FAST_RED_sparseMUL(FILE* Dpart)
         else if(strcmp(str1[0], "B") == 0) {
 
             //insert in hashtable B
-            insert(tB, atoi(str1[1]), atof(atr1[2]));
+            insert(tB, atoi(str1[1]), atof(str1[2]));
         }
 
     }
