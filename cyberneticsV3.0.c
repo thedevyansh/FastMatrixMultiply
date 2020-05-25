@@ -2,39 +2,33 @@
 #include<string.h>
 #include<stdlib.h>
 
-#define MAX 100
+#define MAX 500
 
 int sizeA = 0, sizeB = 0;
 int r1, r2, c1, c2;
 
-//doing all this shit for creating two hashtables A & B
-struct node
+struct list
 {
-    int key;
-    float value;
-    struct node *next;
+	char keyValue[50];
+	char elementalValues[5][10];
+	struct list *next;
 };
 
-struct hashTable
-{
-    int size;
-    struct node **list;
-};
-
-struct hashTable *tA = NULL, *tB = NULL;
 
 int input(int arr[][3], int, int);
 FILE* Combined_Sparse_Compact(int A[][3], int B[][3]);
 FILE* FAST_MAP_sparseMUL(FILE* D); // Map task;
-void FAST_RED_sparseMUL (FILE* Dpart); // Reduce task ;
+FILE* FAST_RED_sparseMUL (FILE* sorted); // Reduce task ;
 
-struct hashTable* createTable(int);
-int hashCode(struct hashTable*, int);
-void insert(struct hashTable*, int, float);
+int subString(char el[][10], char *str, char *ch);
+void pointerTostring(char *str, char *ptr);
+FILE* sortedDpart(FILE* Dpart);
+int keyCompare(char str1[][10], char str2[][10]);
+
 
 int main()
 {
-    //int r1, r2, c1, c2;
+
     int A[MAX][3], B[MAX][3];
 
     printf("Enter number of rows and columns of big sparse matrix 1: ");
@@ -51,11 +45,13 @@ int main()
 
     FILE *Dpart = FAST_MAP_sparseMUL(fp);  //calling map function
 
-    //creating two hashtables for A and B
-    tA = createTable(MAX);
-    tB = createTable(MAX);
+    FILE *sorted = sortedDpart(Dpart);
 
-    FAST_RED_sparseMUL(Dpart); // calling reduce function
+    FILE *finalResult = FAST_RED_sparseMUL(sorted); // calling reduce function
+
+    fclose(finalResult);
+
+    printf("Hurray! The multiplication is done. Check the result in finalResult.txt file in the same directory!\n");
 
     return 0;
 }
@@ -85,7 +81,7 @@ int input(int arr[][3], int r, int c)
 FILE* Combined_Sparse_Compact(int A[][3], int B[][3])
 {
     int i, j;
-    char str1[MAX], str2[MAX], temp[10];
+    char str1[MAX], str2[MAX], temp[50];
     char line[2*MAX];
 
     FILE *f1 = fopen("fileA.txt", "a");
@@ -237,7 +233,7 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
     for(int i = 0; i < count; i++) {
 
         l = 0;
-        char *str[2], *c;
+        char *str[4], *c;
         int s1, s2;
 
         c = strtok(strBase[i], "\t");
@@ -263,10 +259,9 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
             c = strtok(NULL, ",");
         }
         s2 = l;
-        char temp[10];
+        char temp[50];
 
-        //need to improve limits of key and value
-        char key[10], value[10];
+        char key[50], value[50];
 
         if(strcmp(str1[0], "A") == 0) {
 
@@ -287,7 +282,7 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
                     strcat(value, ",");
                     strcat(value, str2[r]);
 
-                    fprintf(Dpart, "%s\t%s\n", key, value);
+                    fprintf(Dpart, "%s,%s\n", key, value);
                 }
             }
         }
@@ -311,144 +306,270 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
                     strcat(value, ",");
                     strcat(value, str2[r]);
 
-                    fprintf(Dpart, "%s\t%s\n", key, value);
+                    fprintf(Dpart, "%s,%s\n", key, value);
                 }
             }
         }
 
     }
 
-    fclose(D); remove("fileCombined.txt");
+    fclose(D); //remove("fileCombined.txt");
     free(strBase);
 
     return Dpart;
 
 }
 
-// H A S H      T A B L E       C R E A T I O N
-struct hashTable* createTable(int size)
+void pointerTostring(char *str , char *ptr)
 {
-    struct hashTable *t = (struct hashTable*) malloc(sizeof(struct hashTable));
-    t->size = size;
-    t->list = (struct node**) malloc(size * sizeof(struct node *));
 
-    for(int i = 0; i < size; i++)
-        t->list[i] = NULL;
+	int i = 0 ;
 
-    return t;
+	while(*ptr!='\0') {
+
+		str[i] = *ptr;
+		i++;  ptr++;
+	}
+
+	str[i] = '\0';
 }
 
-// H A S H      C O D E
-int hashCode(struct hashTable* t, int key)
+int subString(char el[][10], char *str, char *ch)
 {
-    return key%(t->size);
+	int i = 0;
+	char *ptr;
+
+	ptr = strtok(str,ch);
+
+	while(ptr != NULL) {
+
+	  	pointerTostring (el[i], ptr);
+	  	ptr = strtok(NULL,ch);
+	  	i++;
+
+	}
+
+	return i ;
 }
 
-//INSERTING IN HASH TABLE
-void insert(struct hashTable* t, int key, float value)
+int keyCompare(char str1[5][10], char str2[5][10])
 {
-    int pos = hashCode(t, key);
 
-    if(t->list[pos] == NULL) {
+	if(atoi(str1[0]) > atoi(str2[0]))
+		return 1  ;
 
-        struct node *newnode = (struct node*) malloc(sizeof(struct node));
-        newnode->key = key;
-        newnode->value = value;
-        newnode->next = NULL;
+	else if(atoi(str1[0]) < atoi(str2[0]))
+		return -1 ;
 
-        t->list[pos] = newnode;
-    }
+	else  {
 
-    else {
+		if(atoi(str1[1]) > atoi(str2[1]))
+			return 1 ;
 
-        struct node *transverse = NULL, *temp = t->list[pos];
+		else if (atoi(str1[1]) < atoi(str2[1]))
+			return -1 ;
 
-        while(temp != NULL) {
+		else
+			return 0 ;
 
-            if(temp->key == key) {
-
-                temp->value = value;
-
-                return;
-            }
-
-            //pointer to last node
-            if(temp->next == NULL)
-                transverse = temp;
-
-            temp = temp->next;
-        }
-
-        struct node *newnode = (struct node*) malloc(sizeof(struct node));
-        newnode->key = key;
-        newnode->value = value;
-        newnode->next = NULL;
-
-        transverse->next = newnode;
-    }
+	}
 }
 
-void FAST_RED_sparseMUL(FILE* Dpart)
+FILE* sortedDpart(FILE *Dpart)
 {
+
     fclose(Dpart);
 
-    Dpart = fopen("keyValue.txt", "r");
+	Dpart = fopen("keyValue.txt","r");
 
-    int count = 0, i, l = 0;
-    char ch;
+	FILE *sorted = fopen("sorted.txt","w");
 
-    while((ch = getc(Dpart)) != EOF) {
-        if(ch == '\n')
-            count++;
+	char str[50], str1[50], str2[50];
+	struct list *head = NULL, *temp, *iTemp, *key, *node;
+	int n = 0, nCount, isGreater, isSwapped, len, i ;
+
+	while(fgets(str, 50, Dpart) != NULL)  {
+
+        n++;
+	    len = strlen(str);
+		str[len-1] = '\0';
+
+		node = (struct list *) malloc(sizeof(struct list));
+		node->next = NULL;
+		strcpy(node->keyValue,str);
+
+		nCount = subString(node->elementalValues, str, ",");
+
+		if(head == NULL) {
+			head = node;
+			temp = head;
+		}
+
+		else {
+			temp->next = node;
+			temp = temp->next;
+		}
     }
-    rewind(Dpart);
 
-    char *strTemp[count];
+    temp = NULL;
 
-    for(i = 0; i < count; i++) {
-        strTemp[i] = (char *) malloc(sizeof(char) * 2 * MAX);
-        strTemp[i][0] = '\0';
-    }
+    while(temp != head->next) {
 
-    while((ch = getc(Dpart)) != EOF) {
-        if(ch != '\n')
-        strncat(strTemp[l], &ch, 1);
+    	isSwapped = 0;
+    	key = head;
+    	iTemp = key->next;
 
-        else
-        l++;
-    }
+    	while(iTemp != temp) {
 
-    for(i = 0; i < count; i++) {
+    		isGreater = keyCompare(key->elementalValues, iTemp->elementalValues);
 
-        char *str[2], *c;
-        l = 0;
+    		if(isGreater == 1) {
 
-        c = strtok(strTemp[i], "\t");
-        while(c != NULL) {
-            str[l++] = c;
-            c = strtok(NULL, "\t");
-        }
-        l = 0;
+    			isSwapped = 1;
 
-        char *str1[3];
+    			strcpy(str, key->keyValue);
+    			strcpy(key->keyValue, iTemp->keyValue);
+    			strcpy(iTemp->keyValue, str);
 
-        c = strtok(str[1], ",");
-        while(c != NULL) {
-            str1[l++] = c;
-            c = strtok(NULL, ",");
-        }
+    			nCount = subString(iTemp->elementalValues, str, ",");
 
-        if(strcmp(str1[0], "A") == 0) {
+    			strcpy(str,key->keyValue) ;
 
-            //insert in hashtable A
-            insert(tA, atoi(str1[1]), atof(str1[2]));
-        }
+    			nCount = subString(key->elementalValues, str, ",");
+    		}
 
-        else if(strcmp(str1[0], "B") == 0) {
+    		key = key->next ;
+    		iTemp = iTemp->next ;
+    	}
 
-            //insert in hashtable B
-            insert(tB, atoi(str1[1]), atof(str1[2]));
-        }
+   		temp = key;
 
-    }
+    	if(isSwapped == 0)
+    		break;
+	}
+
+	temp = head;
+
+	while(temp != NULL) {
+
+		fputs(temp->keyValue,sorted) ;
+		temp = temp->next ;
+		fprintf(sorted, "%c", '\n');
+	}
+
+	fclose(Dpart) ;
+	fclose(sorted) ;
+
+	return sorted;
+}
+
+FILE* FAST_RED_sparseMUL(FILE *sorted)
+{
+
+    fclose(sorted);
+
+    sorted = fopen("sorted.txt","r");
+
+	FILE *result = fopen("finalResult.txt","w");
+
+	struct list *head1 = NULL, *head2 = NULL, *temp1, *temp2, *node ;
+	int i, j, len, count1 = 0, count2 = 0, nCount, val1, val2, val=0, flag;
+	char str[50], str1[10], str2[10], tempStr[10];
+
+	while(fgets(str,50,sorted) != NULL) {
+
+		len=strlen(str);
+		str[len-1]='\0';
+
+		node=(struct list *)malloc(sizeof(struct list));
+		node->next=NULL;
+
+		strcpy(node->keyValue,str);
+
+		nCount = subString(node->elementalValues, str,",");
+
+		if(strcmp(node->elementalValues[2], "A") == 0) {
+
+			if(head1 == NULL) {
+				head1 = node ;
+				temp1 = head1 ;
+			}
+
+			temp1->next = node ;
+			temp1 = temp1->next ;
+			count1++ ;
+		}
+
+		else if(strcmp(node->elementalValues[2], "B") == 0 ) {
+
+			if(head2 == NULL) {
+				head2 = node;
+				temp2 = head2;
+			}
+
+			temp2->next = node;
+			temp2 = temp2->next;
+			count2++;
+		}
+	}
+
+	temp1 = head1;
+	temp2 = head2;
+
+	while(temp1 != NULL && temp2 != NULL) {
+
+		val = 0;
+
+		strcpy(str1,temp1->elementalValues[0]);
+		strcpy(str2,temp1->elementalValues[1]);
+
+		while(temp1 != NULL && temp2 != NULL && keyCompare(temp1->elementalValues, temp2->elementalValues) == 0
+        && strcmp(temp1->elementalValues[0], str1) == 0 && strcmp(temp1->elementalValues[1], str2)==0) {
+
+			if(strcmp(temp1->elementalValues[3], temp2->elementalValues[3]) == 0) {
+
+				val1 = atoi(temp1->elementalValues[4]);
+			    val2 = atoi(temp2->elementalValues[4]);
+			    val += val1*val2 ;
+			    temp1 = temp1->next;
+			    temp2 = temp2->next;
+
+			}
+
+			else if(atoi(temp1->elementalValues[3]) < atoi(temp2->elementalValues[3])) {
+
+				temp1 = temp1->next;
+
+			}
+
+			else {
+
+				temp2 = temp2->next;
+			}
+		}
+
+		if(val != 0) {
+
+			strcpy(str, str1);
+			strcat(str, ",");
+			strcat(str, str2);
+			strcat(str, ",");
+			itoa(val, tempStr,10);
+			strcat(str, tempStr);
+			fputs(str, result);
+			fprintf(result, "%c", '\n');
+		}
+
+		while(temp1 != NULL && temp2 != NULL && keyCompare(temp1->elementalValues, temp2->elementalValues) < 0 ) {
+			temp1 = temp1->next;
+		}
+
+		while(temp1 != NULL && temp2!=NULL && keyCompare(temp1->elementalValues, temp2->elementalValues) > 0 ) {
+			temp2 = temp2->next;
+		}
+	}
+
+	fclose(result) ;
+
+	return result;
 }
