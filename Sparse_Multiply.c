@@ -1,12 +1,21 @@
+/*
+COPYRIGHT 2020 DEVYANSH CHAWLA. All Rights Reserved.
+Created from May 21, 2020 to May 26, 2020.
+*/
+
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 
 #define MAX 500
 
+//Number of non zero values in big data sparse matrices A & B
 int sizeA = 0, sizeB = 0;
+
+//Number of rows and columns in a & B
 int r1, r2, c1, c2;
 
+//user defined data type for storing key-value pairs
 struct list
 {
 	char keyValue[50];
@@ -17,8 +26,8 @@ struct list
 
 int input(int arr[][3], int, int);
 FILE* Combined_Sparse_Compact(int A[][3], int B[][3]);
-FILE* FAST_MAP_sparseMUL(FILE* D); // Map task;
-FILE* FAST_RED_sparseMUL (FILE* sorted); // Reduce task ;
+FILE* FAST_MAP_sparseMUL(FILE* D);
+FILE* FAST_RED_sparseMUL (FILE* sorted);
 
 int subString(char el[][10], char *str, char *ch);
 void pointerTostring(char *str, char *ptr);
@@ -28,7 +37,6 @@ int keyCompare(char str1[][10], char str2[][10]);
 
 int main()
 {
-
     int A[MAX][3], B[MAX][3];
 
     printf("Enter number of rows and columns of big sparse matrix 1: ");
@@ -41,21 +49,26 @@ int main()
     printf("Enter the values of big sparse matrix 2:\n");
     sizeB = input(B, r2, c2);
 
+    //function called to get compact mapreducible format of matrices A & B
     FILE *fp = Combined_Sparse_Compact(A, B);
 
-    FILE *Dpart = FAST_MAP_sparseMUL(fp);  //calling map function
+    //called mapping function
+    FILE *Dpart = FAST_MAP_sparseMUL(fp);
 
+    //called sorting function to sort intermediate key-value pairs file
     FILE *sorted = sortedDpart(Dpart);
 
-    FILE *finalResult = FAST_RED_sparseMUL(sorted); // calling reduce function
+    //called reduce function which will return the final result
+    FILE *finalResult = FAST_RED_sparseMUL(sorted);
 
     fclose(finalResult);
 
-    printf("Hurray! The multiplication is done. Check the result in finalResult.txt file in the same directory!\n");
+    printf("\nHurray! The multiplication is done. Check the result in finalResult.txt file in the same directory!\n");
 
     return 0;
 }
 
+//function to input values of sparse matrices A & B without storing null values
 int input(int arr[][3], int r, int c)
 {
     int num, k = 0;
@@ -78,6 +91,7 @@ int input(int arr[][3], int r, int c)
    return k;
 }
 
+//function to represent A & B in compact mapreducible format
 FILE* Combined_Sparse_Compact(int A[][3], int B[][3])
 {
     int i, j;
@@ -195,6 +209,7 @@ FILE* Combined_Sparse_Compact(int A[][3], int B[][3])
     return D;
 }
 
+//function to get intermediate key-value pairs
 FILE* FAST_MAP_sparseMUL(FILE* D)
 {
     int count = 0, l = 0;
@@ -313,13 +328,14 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
 
     }
 
-    fclose(D); //remove("fileCombined.txt");
+    fclose(D);
     free(strBase);
 
     return Dpart;
 
 }
 
+//function to copy contents of a string in another character array
 void pointerTostring(char *str , char *ptr)
 {
 
@@ -334,6 +350,7 @@ void pointerTostring(char *str , char *ptr)
 	str[i] = '\0';
 }
 
+//function to split a given string according to a delimiter
 int subString(char el[][10], char *str, char *ch)
 {
 	int i = 0;
@@ -352,6 +369,7 @@ int subString(char el[][10], char *str, char *ch)
 	return i ;
 }
 
+//function to compare key values
 int keyCompare(char str1[5][10], char str2[5][10])
 {
 
@@ -375,6 +393,7 @@ int keyCompare(char str1[5][10], char str2[5][10])
 	}
 }
 
+//function to sort the intermediate key-value pairs according to the keys
 FILE* sortedDpart(FILE *Dpart)
 {
 
@@ -463,6 +482,7 @@ FILE* sortedDpart(FILE *Dpart)
 	return sorted;
 }
 
+//final reduce function to get the result of multiplication of A & B
 FILE* FAST_RED_sparseMUL(FILE *sorted)
 {
 
