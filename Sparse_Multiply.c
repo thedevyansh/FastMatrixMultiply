@@ -7,7 +7,7 @@ Created from May 21, 2020 to May 26, 2020.
 #include<string.h>
 #include<stdlib.h>
 
-#define MAX 500
+#define MAX 2000
 
 //Number of non zero values in big data sparse matrices A & B
 int sizeA = 0, sizeB = 0;
@@ -95,7 +95,7 @@ int input(int arr[][3], int r, int c)
 FILE* Combined_Sparse_Compact(int A[][3], int B[][3])
 {
     int i, j;
-    char str1[MAX], str2[MAX], temp[50];
+    char str1[MAX], str2[MAX], temp[200];
     char line[2*MAX];
 
     FILE *f1 = fopen("fileA.txt", "a");
@@ -274,9 +274,9 @@ FILE* FAST_MAP_sparseMUL(FILE* D)
             c = strtok(NULL, ",");
         }
         s2 = l;
-        char temp[50];
+        char temp[200];
 
-        char key[50], value[50];
+        char key[200], value[200];
 
         if(strcmp(str1[0], "A") == 0) {
 
